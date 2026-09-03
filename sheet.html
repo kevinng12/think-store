@@ -49,6 +49,7 @@
         password: appConfig.adminPassword || 'admin123'
       };
       const publicSheetUrl = appConfig.publicSheetUrl || '';
+      const expectedHeaders = ['Name', 'Grade', 'Balance'];
 
       function showStatus(message, type = '') {
         statusEl.textContent = message;
@@ -80,8 +81,14 @@
       function renderTable(rows) {
         tbodyEl.innerHTML = '';
 
+        const firstRow = rows[0] || {};
+        const normalizedHeaders = expectedHeaders.map((header) => {
+          const match = Object.keys(firstRow).find((key) => String(key).trim().toLowerCase() === header.toLowerCase());
+          return match || header;
+        });
+
         const headerRow = document.createElement('tr');
-        ['Name', 'Grade', 'Balance'].forEach((header) => {
+        normalizedHeaders.forEach((header) => {
           const th = document.createElement('th');
           th.textContent = header;
           headerRow.appendChild(th);
@@ -90,7 +97,8 @@
 
         rows.forEach((row) => {
           const tr = document.createElement('tr');
-          ['Name', 'Grade', 'Balance'].forEach((key) => {
+          normalizedHeaders.forEach((header) => {
+            const key = Object.keys(row).find((rowKey) => String(rowKey).trim().toLowerCase() === header.toLowerCase()) || header;
             const td = document.createElement('td');
             td.textContent = row[key] ?? '';
             tr.appendChild(td);
@@ -105,13 +113,23 @@
         if (!rows || !rows.length) return [];
 
         const headers = rows[0].map((header) => String(header).trim());
-        return rows.slice(1).filter((row) => row.some((value) => String(value ?? '').trim() !== '')).map((row) => {
+        const normalizedRows = rows.slice(1).filter((row) => row.some((value) => String(value ?? '').trim() !== '')).map((row) => {
           const entry = {};
           headers.forEach((header, index) => {
             entry[header] = row[index] ?? '';
           });
           return entry;
         });
+
+        const hasRequiredColumns = expectedHeaders.every((header) =>
+          headers.some((existing) => existing.trim().toLowerCase() === header.toLowerCase())
+        );
+
+        if (!hasRequiredColumns) {
+          throw new Error(`The sheet must contain the columns: ${expectedHeaders.join(', ')}.`);
+        }
+
+        return normalizedRows;
       }
 
       function parseCsvText(csvText) {
@@ -205,6 +223,14 @@
 
           if (!Array.isArray(data) || data.length === 0) {
             throw new Error('No rows returned from the public Google Sheet data.');
+          }
+
+          const hasRequiredColumns = expectedHeaders.every((header) =>
+            Object.keys(data[0]).some((key) => String(key).trim().toLowerCase() === header.toLowerCase())
+          );
+
+          if (!hasRequiredColumns) {
+            throw new Error(`The sheet data is missing required columns: ${expectedHeaders.join(', ')}.`);
           }
 
           renderTable(data);
