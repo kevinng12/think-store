@@ -148,6 +148,40 @@
         return parseCsv(rows);
       }
 
+      async function fetchGoogleSheetAsJson(url) {
+        const sheetIdMatch = url.match(/\/spreadsheets\/d\/([A-Za-z0-9-_]+)/);
+        if (!sheetIdMatch) {
+          throw new Error('The sheet URL is not a valid public Google Sheet link.');
+        }
+
+        const sheetId = sheetIdMatch[1];
+        const jsonUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+        const response = await fetch(jsonUrl);
+        if (!response.ok) {
+          throw new Error('The Google Sheet is not public or the URL is incorrect.');
+        }
+
+        const text = await response.text();
+        const jsonText = text.replace(/^google.visualization.Query.setResponse\(/, '').replace(/\);?$/, '');
+        const payload = JSON.parse(jsonText);
+        const table = payload?.table || {};
+        const rows = table.rows || [];
+        const cols = table.cols || [];
+
+        if (!rows.length || !cols.length) {
+          throw new Error('No rows were returned from the public Google Sheet.');
+        }
+
+        return rows.map((row) => {
+          const item = {};
+          cols.forEach((col, index) => {
+            const value = row?.c?.[index]?.v ?? '';
+            item[col.label || `Column${index + 1}`] = value;
+          });
+          return item;
+        });
+      }
+
       async function loadSheet() {
         try {
           if (!publicSheetUrl) {
@@ -155,13 +189,20 @@
           }
 
           showStatus('Loading student data...');
-          const response = await fetch(publicSheetUrl);
-          if (!response.ok) {
-            throw new Error('Unable to load the public Google Sheet data.');
+
+          let data;
+          try {
+            const response = await fetch(publicSheetUrl);
+            if (!response.ok) {
+              throw new Error('CSV export was not available.');
+            }
+
+            const csvText = await response.text();
+            data = parseCsvText(csvText);
+          } catch (error) {
+            data = await fetchGoogleSheetAsJson(publicSheetUrl);
           }
 
-          const csvText = await response.text();
-          const data = parseCsvText(csvText);
           if (!Array.isArray(data) || data.length === 0) {
             throw new Error('No rows returned from the public Google Sheet data.');
           }
@@ -171,7 +212,7 @@
         } catch (error) {
           tableEl.style.display = 'none';
           tbodyEl.innerHTML = '';
-          showStatus(error.message || 'Something went wrong.', 'error');
+          showStatus(error.message || 'Something went wrong. Make sure the Google Sheet is public and the URL is a CSV export link.', 'error');
         }
       }
 

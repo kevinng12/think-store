@@ -31,13 +31,7 @@ jobs:
       - name: Create config.js from secrets
         shell: bash
         run: |
-          cat > config.js <<EOF
-          window.APP_CONFIG = {
-            publicSheetUrl: '${PUBLIC_SHEET_URL}',
-            adminUsername: '${ADMIN_USERNAME}',
-            adminPassword: '${ADMIN_PASSWORD}'
-          };
-          EOF
+          node -e "const fs=require('fs'); const cfg={ publicSheetUrl: process.env.PUBLIC_SHEET_URL || '', adminUsername: process.env.ADMIN_USERNAME || '', adminPassword: process.env.ADMIN_PASSWORD || '' }; fs.writeFileSync('config.js', 'window.APP_CONFIG = ' + JSON.stringify(cfg, null, 2) + ';\n');"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
