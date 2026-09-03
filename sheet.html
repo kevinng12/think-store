@@ -29,7 +29,10 @@
           <button type="submit" class="btn btn-primary">Add Student</button>
         </form>
 
-        <button id="logoutBtn" class="btn btn-secondary" style="margin-top: 12px;">Logout</button>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px;">
+          <button id="homeBtn" class="btn btn-secondary">Back to Store</button>
+          <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+        </div>
       </div>
 
       <div id="sheetStatus" class="sheet-status" aria-live="polite"></div>
@@ -47,6 +50,7 @@
       const appSection = document.getElementById('appSection');
       const loginForm = document.getElementById('loginForm');
       const logoutBtn = document.getElementById('logoutBtn');
+      const homeBtn = document.getElementById('homeBtn');
       const studentForm = document.getElementById('studentForm');
       const statusEl = document.getElementById('sheetStatus');
       const tableEl = document.getElementById('sheetTable');
@@ -323,6 +327,10 @@
         setLoggedIn(false);
         checkSession();
         showStatus('Logged out.', 'success');
+      });
+
+      homeBtn.addEventListener('click', () => {
+        window.location.href = 'index.html';
       });
 
       checkSession();

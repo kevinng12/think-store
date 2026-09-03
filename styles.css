@@ -177,6 +177,39 @@ h1 {
   z-index: 1;
 }
 
+.mini-card-capri {
+  background: linear-gradient(135deg, #facc15 0%, #f97316 100%);
+  border: none;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+
+.mini-card-capri::before {
+  content: "";
+  position: absolute;
+  width: 70px;
+  height: 110px;
+  right: 22px;
+  top: 8px;
+  border-radius: 14px 14px 18px 18px;
+  background: linear-gradient(180deg, #fef9c3 0%, #fbbf24 100%);
+  box-shadow: inset -10px 0 0 rgba(255, 255, 255, 0.26);
+}
+
+.mini-card-capri::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 18px;
+  right: 62px;
+  top: 12px;
+  border-radius: 8px 8px 0 0;
+  background: #fef3c7;
+}
+
 .price-row {
   display: flex;
   justify-content: space-between;
@@ -292,6 +325,44 @@ h1 {
   margin: 0;
   color: var(--muted);
   line-height: 1.6;
+}
+
+.sheet-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.home-sheet-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.home-sheet-table th,
+.home-sheet-table td {
+  border-bottom: 1px solid var(--border);
+  padding: 16px 18px;
+  text-align: left;
+}
+
+.home-sheet-table th {
+  background: #fff7ed;
+  color: var(--primary);
+  font-size: 0.88rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.home-sheet-table td {
+  color: var(--primary);
+}
+
+.sheet-loading {
+  text-align: center;
+  color: var(--muted);
+  padding: 26px 18px;
 }
 
 .viewer-page {

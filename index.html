@@ -35,26 +35,26 @@
       <section class="hero">
         <div class="container hero-inner">
           <div>
-            <div class="eyebrow">Fresh finds</div>
-            <h1>Style your everyday essentials.</h1>
+            <div class="eyebrow">School snacks</div>
+            <h1>Fuel your day the easy way.</h1>
             <p class="subtitle">
-              Discover thoughtful products for home, work, and play — curated to make every day feel a little better.
+              Grab quick, affordable snacks and lunch essentials made for busy school days, study sessions, and after-class cravings.
             </p>
             <div class="hero-actions">
-              <a href="#" class="btn btn-primary">Shop Collection</a>
-              <a href="#" class="btn btn-secondary">View Deals</a>
+              <a href="#" class="btn btn-primary">Shop Snacks</a>
+              <a href="#" class="btn btn-secondary">Deals</a>
               <a href="sheet.html" class="btn btn-primary">View Sheet Data</a>
             </div>
           </div>
 
           <div class="hero-card">
             <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.12em; color: #fbbf24;">Featured item</div>
-            <h2 style="margin: 12px 0 10px; font-size: 2rem;">Luma Speaker</h2>
-            <div class="mini-card">
-              <div style="font-size: 0.8rem; color: #d1d5db;">Premium audio</div>
+            <h2 style="margin: 12px 0 10px; font-size: 2rem;">Capri Sun</h2>
+            <div class="mini-card mini-card-capri">
+              <div style="font-size: 0.8rem; color: #d1d5db;">Juicy refreshment</div>
               <div class="price-row">
-                <div class="price">$89</div>
-                <span style="font-size: 1.1rem; color: #fbbf24;">★★★★★</span>
+                <div class="price">$10</div>
+                <span style="font-size: 1.1rem; color: #fbbf24;">★</span>
               </div>
             </div>
           </div>
@@ -70,37 +70,37 @@
 
           <div class="product-grid">
             <article class="product-card">
-              <div class="product-image">🧴</div>
+              <div class="product-image">�</div>
               <div class="product-info">
-                <span class="product-tag">Wellness</span>
-                <h3>Daily Care Set</h3>
+                <span class="product-tag">Lunch</span>
+                <h3>Turkey Sandwich</h3>
                 <div class="product-meta">
                   <span class="rating">★★★★★ 4.9</span>
-                  <span class="price-tag">$42</span>
+                  <span class="price-tag">$6</span>
                 </div>
               </div>
             </article>
 
             <article class="product-card">
-              <div class="product-image">🧥</div>
+              <div class="product-image">🍫</div>
               <div class="product-info">
-                <span class="product-tag">Apparel</span>
-                <h3>Urban Layer</h3>
+                <span class="product-tag">Snack</span>
+                <h3>Chocolate Pack</h3>
                 <div class="product-meta">
                   <span class="rating">★★★★★ 4.8</span>
-                  <span class="price-tag">$68</span>
+                  <span class="price-tag">$4</span>
                 </div>
               </div>
             </article>
 
             <article class="product-card">
-              <div class="product-image">⌚</div>
+              <div class="product-image">🥤</div>
               <div class="product-info">
-                <span class="product-tag">Accessories</span>
-                <h3>Tempo Watch</h3>
+                <span class="product-tag">Drink</span>
+                <h3>Fruit Punch</h3>
                 <div class="product-meta">
                   <span class="rating">★★★★★ 4.9</span>
-                  <span class="price-tag">$94</span>
+                  <span class="price-tag">$3</span>
                 </div>
               </div>
             </article>
@@ -111,28 +111,132 @@
       <section class="section">
         <div class="container">
           <div class="section-header">
-            <h2>Why customers love us</h2>
+            <h2>Student data</h2>
           </div>
 
-          <div class="features">
-            <div class="feature">
-              <div class="feature-icon">🚚</div>
-              <h3>Fast shipping</h3>
-              <p>Quick delivery on best-selling essentials and everyday favorites.</p>
-            </div>
-            <div class="feature">
-              <div class="feature-icon">🛡️</div>
-              <h3>Quality guaranteed</h3>
-              <p>Every item is selected for comfort, durability, and value.</p>
-            </div>
-            <div class="feature">
-              <div class="feature-icon">💬</div>
-              <h3>Friendly support</h3>
-              <p>Need help deciding? Our team is ready to guide your purchase.</p>
-            </div>
+          <div class="sheet-panel">
+            <table id="homeSheetTable" class="home-sheet-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Grade</th>
+                  <th>Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="3" class="sheet-loading">Loading student data...</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
     </main>
+
+    <script src="config.js"></script>
+    <script>
+      const homeSheetTable = document.getElementById('homeSheetTable');
+      const homeSheetBody = homeSheetTable.querySelector('tbody');
+      const homeSheetConfig = window.APP_CONFIG || {};
+      const publicSheetUrl = homeSheetConfig.publicSheetUrl || '';
+
+      function parseCsvRows(csvText) {
+        const rows = [];
+        const lines = csvText.trim().split(/\r?\n/);
+
+        for (const line of lines) {
+          const cells = [];
+          let current = '';
+          let inQuotes = false;
+
+          for (let i = 0; i < line.length; i += 1) {
+            const char = line[i];
+            const next = line[i + 1];
+
+            if (char === '"') {
+              if (inQuotes && next === '"') {
+                current += '"';
+                i += 1;
+              } else {
+                inQuotes = !inQuotes;
+              }
+            } else if (char === ',' && !inQuotes) {
+              cells.push(current);
+              current = '';
+            } else {
+              current += char;
+            }
+          }
+
+          cells.push(current);
+          rows.push(cells);
+        }
+
+        return rows;
+      }
+
+      function renderHomeTable(rows) {
+        homeSheetBody.innerHTML = '';
+
+        if (!rows.length) {
+          homeSheetBody.innerHTML = '<tr><td colspan="3" class="sheet-loading">No student data available.</td></tr>';
+          return;
+        }
+
+        const headers = rows[0].map((header) => String(header).trim());
+        const required = ['Name', 'Grade', 'Balance'];
+
+        const hasRequiredColumns = required.every((header) =>
+          headers.some((item) => item.toLowerCase() === header.toLowerCase())
+        );
+
+        if (!hasRequiredColumns) {
+          homeSheetBody.innerHTML = '<tr><td colspan="3" class="sheet-loading">The sheet must include Name, Grade, and Balance columns.</td></tr>';
+          return;
+        }
+
+        rows.slice(1).forEach((row) => {
+          const entry = {};
+          headers.forEach((header, index) => {
+            entry[header] = row[index] ?? '';
+          });
+
+          const tr = document.createElement('tr');
+          const name = entry[headers.find((header) => header.toLowerCase() === 'name')] || '';
+          const grade = entry[headers.find((header) => header.toLowerCase() === 'grade')] || '';
+          const balance = entry[headers.find((header) => header.toLowerCase() === 'balance')] || '';
+
+          tr.innerHTML = `
+            <td>${name}</td>
+            <td>${grade}</td>
+            <td>${balance}</td>
+          `;
+          homeSheetBody.appendChild(tr);
+        });
+      }
+
+      async function loadHomeData() {
+        if (!publicSheetUrl) {
+          homeSheetBody.innerHTML = '<tr><td colspan="3" class="sheet-loading">No public Google Sheet URL configured.</td></tr>';
+          return;
+        }
+
+        try {
+          const response = await fetch(publicSheetUrl);
+          if (!response.ok) {
+            throw new Error('Unable to read the public sheet.');
+          }
+
+          const csvText = await response.text();
+          const rows = parseCsvRows(csvText);
+          renderHomeTable(rows);
+        } catch (error) {
+          homeSheetBody.innerHTML = '<tr><td colspan="3" class="sheet-loading">Unable to load student data.</td></tr>';
+        }
+      }
+
+      loadHomeData();
+    </script>
   </body>
 </html>
