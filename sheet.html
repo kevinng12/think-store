@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Sheet Viewer</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="viewer-page">
+    <div class="viewer-shell">
+      <h1>Student Data</h1>
+
+      <div id="loginSection">
+        <h2>Login</h2>
+        <form id="loginForm" class="sheet-form">
+          <input id="username" class="sheet-input" type="text" placeholder="Username" />
+          <input id="password" class="sheet-input" type="password" placeholder="Password" />
+          <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+      </div>
+
+      <div id="appSection" style="display: none;">
+        <p>This page is connected to the configured spreadsheet and will display the Name, Grade, and Balance values from it.</p>
+
+        <button id="logoutBtn" class="btn btn-secondary" style="margin-top: 12px;">Logout</button>
+      </div>
+
+      <div id="sheetStatus" class="sheet-status" aria-live="polite"></div>
+
+      <div class="sheet-table-wrap">
+        <table id="sheetTable" class="sheet-table" style="display: none;">
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+      const loginSection = document.getElementById('loginSection');
+      const appSection = document.getElementById('appSection');
+      const loginForm = document.getElementById('loginForm');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const statusEl = document.getElementById('sheetStatus');
+      const tableEl = document.getElementById('sheetTable');
+      const tbodyEl = tableEl.querySelector('tbody');
+      const appConfig = window.APP_CONFIG || {};
+      const validUser = {
+        username: appConfig.adminUsername || 'admin',
+        password: appConfig.adminPassword || 'admin123'
+      };
+      const publicSheetUrl = appConfig.publicSheetUrl || '';
+
+      function showStatus(message, type = '') {
+        statusEl.textContent = message;
+        statusEl.className = 'sheet-status';
+        if (type) statusEl.classList.add(type);
+      }
+
+      function setLoggedIn(value) {
+        localStorage.setItem('sheetAppLoggedIn', value ? 'true' : 'false');
+      }
+
+      function isLoggedIn() {
+        return localStorage.getItem('sheetAppLoggedIn') === 'true';
+      }
+
+      function checkSession() {
+        if (isLoggedIn()) {
+          loginSection.style.display = 'none';
+          appSection.style.display = 'block';
+          loadSheet();
+        } else {
+          loginSection.style.display = 'block';
+          appSection.style.display = 'none';
+          tableEl.style.display = 'none';
+          tbodyEl.innerHTML = '';
+        }
+      }
+
+      function renderTable(rows) {
+        tbodyEl.innerHTML = '';
+
+        const headerRow = document.createElement('tr');
+        ['Name', 'Grade', 'Balance'].forEach((header) => {
+          const th = document.createElement('th');
+          th.textContent = header;
+          headerRow.appendChild(th);
+        });
+        tbodyEl.appendChild(headerRow);
+
+        rows.forEach((row) => {
+          const tr = document.createElement('tr');
+          ['Name', 'Grade', 'Balance'].forEach((key) => {
+            const td = document.createElement('td');
+            td.textContent = row[key] ?? '';
+            tr.appendChild(td);
+          });
+          tbodyEl.appendChild(tr);
+        });
+
+        tableEl.style.display = 'table';
+      }
+
+      function parseCsv(rows) {
+        if (!rows || !rows.length) return [];
+
+        const headers = rows[0].map((header) => String(header).trim());
+        return rows.slice(1).filter((row) => row.some((value) => String(value ?? '').trim() !== '')).map((row) => {
+          const entry = {};
+          headers.forEach((header, index) => {
+            entry[header] = row[index] ?? '';
+          });
+          return entry;
+        });
+      }
+
+      function parseCsvText(csvText) {
+        const rows = [];
+        const lines = csvText.trim().split(/\r?\n/);
+        for (const line of lines) {
+          const cells = [];
+          let current = '';
+          let inQuotes = false;
+
+          for (let i = 0; i < line.length; i += 1) {
+            const char = line[i];
+            const next = line[i + 1];
+
+            if (char === '"') {
+              if (inQuotes && next === '"') {
+                current += '"';
+                i += 1;
+              } else {
+                inQuotes = !inQuotes;
+              }
+            } else if (char === ',' && !inQuotes) {
+              cells.push(current);
+              current = '';
+            } else {
+              current += char;
+            }
+          }
+
+          cells.push(current);
+          rows.push(cells);
+        }
+
+        return parseCsv(rows);
+      }
+
+      async function loadSheet() {
+        try {
+          if (!publicSheetUrl) {
+            throw new Error('No public Google Sheet URL configured in config.js.');
+          }
+
+          showStatus('Loading student data...');
+          const response = await fetch(publicSheetUrl);
+          if (!response.ok) {
+            throw new Error('Unable to load the public Google Sheet data.');
+          }
+
+          const csvText = await response.text();
+          const data = parseCsvText(csvText);
+          if (!Array.isArray(data) || data.length === 0) {
+            throw new Error('No rows returned from the public Google Sheet data.');
+          }
+
+          renderTable(data);
+          showStatus('Student data loaded successfully.', 'success');
+        } catch (error) {
+          tableEl.style.display = 'none';
+          tbodyEl.innerHTML = '';
+          showStatus(error.message || 'Something went wrong.', 'error');
+        }
+      }
+
+      loginForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        if (username === validUser.username && password === validUser.password) {
+          setLoggedIn(true);
+          showStatus('Login successful.', 'success');
+          checkSession();
+          return;
+        }
+
+        setLoggedIn(false);
+        showStatus('Invalid username or password.', 'error');
+      });
+
+      logoutBtn.addEventListener('click', () => {
+        setLoggedIn(false);
+        checkSession();
+        showStatus('Logged out.', 'success');
+      });
+
+      checkSession();
+    </script>
+  </body>
+</html>

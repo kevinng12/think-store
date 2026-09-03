@@ -20,9 +20,24 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    env:
+      PUBLIC_SHEET_URL: ${{ secrets.PUBLIC_SHEET_URL }}
+      ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Create config.js from secrets
+        shell: bash
+        run: |
+          cat > config.js <<EOF
+          window.APP_CONFIG = {
+            publicSheetUrl: '${PUBLIC_SHEET_URL}',
+            adminUsername: '${ADMIN_USERNAME}',
+            adminPassword: '${ADMIN_PASSWORD}'
+          };
+          EOF
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
