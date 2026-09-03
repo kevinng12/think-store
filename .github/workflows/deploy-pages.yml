@@ -24,6 +24,7 @@ jobs:
       PUBLIC_SHEET_URL: ${{ secrets.PUBLIC_SHEET_URL }}
       ADMIN_USERNAME: ${{ secrets.ADMIN_USERNAME }}
       ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+      APP_SCRIPT_URL: ${{ secrets.APP_SCRIPT_URL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,7 +32,7 @@ jobs:
       - name: Create config.js from secrets
         shell: bash
         run: |
-          node -e "const fs=require('fs'); const cfg={ publicSheetUrl: process.env.PUBLIC_SHEET_URL || '', adminUsername: process.env.ADMIN_USERNAME || '', adminPassword: process.env.ADMIN_PASSWORD || '' }; fs.writeFileSync('config.js', 'window.APP_CONFIG = ' + JSON.stringify(cfg, null, 2) + ';\n');"
+          node -e "const fs=require('fs'); const cfg={ publicSheetUrl: process.env.PUBLIC_SHEET_URL || '', adminUsername: process.env.ADMIN_USERNAME || '', adminPassword: process.env.ADMIN_PASSWORD || '', sheetWriteUrl: process.env.APP_SCRIPT_URL || '' }; fs.writeFileSync('config.js', 'window.APP_CONFIG = ' + JSON.stringify(cfg, null, 2) + ';\n');"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
