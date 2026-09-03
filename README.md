@@ -21,7 +21,7 @@ This version reads from a public Google Sheet by CSV export. Keep the real value
 
 The workflow in `.github/workflows/deploy-pages.yml` generates a local `config.js` file during deployment from those secrets, so the committed source does not include the real values.
 
-A committed example is included in `config.example.js` for local development if you want to test without GitHub secrets.
+For local testing, create a `config.js` file in the project root with the same shape as the generated file.
 
 ### Local preview
 Serve the folder with a simple local web server so the browser can fetch the data correctly.

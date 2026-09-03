@@ -251,41 +251,50 @@
         }
       }
 
+      async function writeStudentToSheet(payload) {
+        if (!sheetWriteUrl) {
+          throw new Error('No write endpoint configured. Set sheetWriteUrl in config.js.');
+        }
+
+        const body = {
+          Name: String(payload.Name || '').trim(),
+          Grade: String(payload.Grade || '').trim(),
+          Balance: String(payload.Balance || '').trim()
+        };
+
+        if (!body.Name || !body.Grade || !body.Balance) {
+          throw new Error('Name, Grade, and Balance are required.');
+        }
+
+        const response = await fetch(sheetWriteUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok || result.status !== 'success') {
+          throw new Error(result.message || 'Unable to save the student record.');
+        }
+
+        return result;
+      }
+
       studentForm.addEventListener('submit', async (event) => {
         event.preventDefault();
 
-        if (!sheetWriteUrl) {
-          showStatus('Write endpoint is not configured. Add a Google Apps Script URL for student writes.', 'error');
-          return;
-        }
-
         const payload = {
-          Name: document.getElementById('studentName').value.trim(),
-          Grade: document.getElementById('studentGrade').value.trim(),
-          Balance: document.getElementById('studentBalance').value.trim()
+          Name: document.getElementById('studentName').value,
+          Grade: document.getElementById('studentGrade').value,
+          Balance: document.getElementById('studentBalance').value
         };
-
-        if (!payload.Name || !payload.Grade || !payload.Balance) {
-          showStatus('Please fill in all fields before adding a student.', 'error');
-          return;
-        }
 
         try {
           showStatus('Adding student to sheet...', '');
-          const response = await fetch(sheetWriteUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-          });
-
-          const result = await response.json().catch(() => ({}));
-
-          if (!response.ok || result.status !== 'success') {
-            throw new Error(result.message || 'Unable to save the student record.');
-          }
-
+          await writeStudentToSheet(payload);
           studentForm.reset();
           await loadSheet();
           showStatus('Student added successfully.', 'success');
